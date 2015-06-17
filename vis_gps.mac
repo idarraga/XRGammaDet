@@ -1,0 +1,71 @@
+########################################################################
+########################################################################
+# vis
+/vis/scene/create
+#/vis/scene/add/axes 0. 0. 0. 10. cm
+#/vis/scene/add/volume World -1 2
+/vis/viewer/set/style s
+
+/run/verbose 0
+/control/verbose 0
+/control/saveHistory
+/tracking/verbose 0
+
+/vis/open OIX 1024x768-100+100
+#/vis/open OGLIXm 1024x768-100+100
+#/vis/open RayTracer
+#/vis/open OGLIQt
+#/vis/open OGLSQt
+#/vis/open OIX
+#/vis/open OGLIX 1024x768-100+100
+#/vis/open OGLSXm
+#/vis/open DAWNFILE
+#/vis/open OGLSX
+#/vis/open OGL 600x600-0+0
+
+/vis/viewer/set/background 0.4 0.5 0.6
+/vis/viewer/set/viewpointThetaPhi 20 50
+#/vis/viewer/set/background 0 0 0
+/vis/viewer/zoom 2.0
+/vis/viewer/flush
+
+# Draw trajectories at end of event, showing trajectory points as
+# markers of size 2 pixels
+/vis/scene/add/trajectories
+/vis/modeling/trajectories/create/drawByCharge
+/vis/modeling/trajectories/drawByCharge-0/default/setDrawStepPts true
+/vis/modeling/trajectories/drawByCharge-0/default/setStepPtsSize 2
+/vis/scene/endOfEventAction accumulate
+
+########################################################################
+########################################################################
+
+/tracking/verbose 0
+
+#########################
+# GPS
+/gps/particle gamma
+/gps/pos/type Point
+
+# Centre
+/gps/pos/centre 0.0 0.0 1051.654 mm
+
+/gps/ang/type iso
+
+/gps/ang/mintheta 0. deg
+/gps/ang/maxtheta 30 deg
+/gps/ang/minphi 0. deg
+/gps/ang/maxphi 360 deg
+
+#/gps/direction  0 0 -1
+
+/gps/ene/type User
+/gps/hist/type energy
+# spectra
+#/gps/hist/point 0.140 1 # 140keV
+#/control/execute gps_source_ASI_50kVp_XRayTube.mac
+/gps/hist/point 0.140 1 #
+
+/gps/source/list
+
+/run/beamOn 1000
