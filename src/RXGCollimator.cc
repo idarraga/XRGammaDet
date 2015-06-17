@@ -17,6 +17,8 @@
 #include "G4VisAttributes.hh"
 #include "G4Colour.hh"
 
+#include "TString.h"
+
 using namespace CLHEP;
 
 G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * motherL, G4double centerZ) {
@@ -25,8 +27,35 @@ G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * mot
 	double hc_rOuter_1 = hc_rOuter_0 * 0.5; // TODO ... calculate according to focus
 	double hc_sep = 150*um;
 
+	///////////////////////////////////////////////////////////////////////////////////////
 	// Collimator Pb body
 	G4Cons * collimatorBody = new G4Cons("CollimatorBody", 0, 10*cm, 0, 8*cm, 2*cm, pi, 2*pi);
+	_CollimatorLogic = new G4LogicalVolume(
+			collimatorBody,
+			_beamColimatorMaterial,
+			"CollimatorBodyLogic");
+
+	G4ThreeVector collPos(0,0, centerZ);
+
+	new G4PVPlacement(
+			0,                // no rotation
+			collPos,
+			_CollimatorLogic, // its logical volume
+			"CollimatorBody", // its name
+			motherL,          // its mother  volume
+			true,            // no boolean operations
+			0,                // copy number
+			true); 			  // checking overlaps
+
+	// Visualization attributes
+	G4VisAttributes* CollVisAtt = new G4VisAttributes( G4Colour(1,1,1, 1) );
+	//CollVisAtt->SetForceSolid( true );
+	CollVisAtt->SetForceWireframe( true );
+	CollVisAtt->SetForceAuxEdgeVisible( true );
+	_CollimatorLogic->SetVisAttributes( CollVisAtt );
+	///////////////////////////////////////////////////////////////////////////////////////
+
+	///////////////////////////////////////////////////////////////////////////////////////
 	// Honeycomb core
 	const G4double z[] = { 0, 4*cm };
 	const G4double rInner[] = { 0, 0 };
@@ -41,6 +70,17 @@ G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * mot
 			rInner,
 			rOuter
 	);
+	G4LogicalVolume * hccLogic = new G4LogicalVolume(
+			hcc,
+			_air,
+			"HoneycombElement");
+
+	// Visualization attributes
+	G4VisAttributes* hccVisAtt = new G4VisAttributes( G4Colour::Blue() );
+	hccVisAtt->SetForceSolid( true );
+	//CollVisAtt->SetForceWireframe( true );
+	hccVisAtt->SetForceAuxEdgeVisible( true );
+	hccLogic->SetVisAttributes( hccVisAtt );
 
 	// Substract the honey comb structure
 	// Loop in y
@@ -50,29 +90,52 @@ G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * mot
 	double inStep = 2*hc_rOuter_0 + hc_sep;
 	double posx = 0., posy = 0.;
 
-	for ( int i = 0 ; i <= 0 ; i++ ) { // loop in x
+	for ( int i = -10 ; i <= 10 ; i++ ) { // loop in x
 
 
-		for ( int j = -1 ; j <= 1 ; j++ ) { // loop in y
+		for ( int j = -10 ; j <= 10 ; j++ ) { // loop in y
 
 			posy = (double)j * inStep + ( (double)i*inStep/2. );
 			posx = i * inStep;
 			runPos.setY( posy );
 			runPos.setX( posx );
 
-			G4cout << "[COLL] Building collimator element " << i << "," << j << G4endl;
+			TString hcc_name = "HoneycombElement_";
+			hcc_name += i; hcc_name += "_"; hcc_name += j;
 
+			// Condition to place or not a HoneyComp element
+
+			// Define rotation
+			//G4RotationMatrix * pRot = new G4RotationMatrix;
+			//pRot->rotateX( 20*deg );
+
+			new G4PVPlacement(
+					0,                // no rotation
+					runPos,
+					hccLogic, // its logical volume
+					hcc_name.Data(), // its name
+					_CollimatorLogic,          // its mother  volume
+					true,            // no boolean operations
+					0,                // copy number
+					true); 			  // checking overlaps
+
+			G4cout << "[COLL] Building collimator element " << i << "," << j << " | " << hcc_name << G4endl;
+
+
+			/*
 			// The first one
 			if ( ! substractColl ) {
 				substractColl = new G4SubtractionSolid("Coll", collimatorBody, hcc, 0x0, runPos );
 			} else {
 				substractColl = new G4SubtractionSolid("Coll", substractColl, hcc, 0x0, runPos );
 			}
+			 */
+
 		}
 
 	}
 
-
+	/*
 	_CollimatorLogic = new G4LogicalVolume(
 			substractColl,
 			_beamColimatorMaterial,
@@ -92,7 +155,7 @@ G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * mot
 
 
 	vector<G4LogicalVolume *> hcc_logic_v;
-
+	 */
 
 
 	/*
@@ -143,12 +206,6 @@ G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * mot
 
 	 */
 
-	// Visualization attributes
-	G4VisAttributes* CollVisAtt = new G4VisAttributes( G4Colour(1,1,1, 1) );
-	CollVisAtt->SetForceSolid( true );
-	//CollVisAtt->SetForceWireframe( true );
-	CollVisAtt->SetForceAuxEdgeVisible( true );
-	_CollimatorLogic->SetVisAttributes( CollVisAtt );
 
 	return _CollimatorLogic;
 

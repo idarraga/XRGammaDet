@@ -85,7 +85,9 @@ G4VPhysicalVolume* RXGDetectorConstruction::Construct()
 	DefineMaterials();
 
 	// Define volumes
-	return DefineVolumes();
+	G4VPhysicalVolume * py = DefineVolumes();
+
+	return py;
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
@@ -99,8 +101,8 @@ void RXGDetectorConstruction::DefineMaterials()
 
 	// Air defined using NIST Manager
 	_air = nistManager->FindOrBuildMaterial("G4_AIR");
-	//_NaI = nistManager->FindOrBuildMaterial("G4_SODIUM_IODIDE"); // Eventually try LSO too
-	_NaI = nistManager->FindOrBuildMaterial("G4_AIR");
+	_NaI = nistManager->FindOrBuildMaterial("G4_SODIUM_IODIDE"); // Eventually try LSO too
+	//_NaI = nistManager->FindOrBuildMaterial("G4_AIR");
 	_RXReadOutChipMaterial = nistManager->FindOrBuildMaterial("G4_Si");
 	_RXSensorMaterial = nistManager->FindOrBuildMaterial("G4_CESIUM_IODIDE");
 	_beamColimatorMaterial = nistManager->FindOrBuildMaterial("G4_Pb"); // ("G4_Pb");
@@ -132,16 +134,17 @@ G4VPhysicalVolume* RXGDetectorConstruction::DefineVolumes()
 	//  at 100cm from this point
 	G4double detectroStrecht = ( NaIHalfZ + 2*CollimatorHalfZ + 2*RXBackscatterShieldfHalfZ + 2*ReadOutHalfZ + 2*RXSensorHalfZ );
 	//G4double detectroStrecht = ( NaIHalfZ + 2*CollimatorHalfZ + 2*ReadOutHalfZ + 2*RXSensorHalfZ );
-	//G4double worldLength = 200*cm  		// A hundred centimeters on each side
-	G4double worldLength = 400*cm;
-			+
-			(2 * detectroStrecht);			// twice the thickness of the detector.
+	G4double worldLength = 200*cm;  		// A hundred centimeters on each side
+	//G4double worldLength = 400*cm;
+	//		+
+	//		(2 * detectroStrecht);			// twice the thickness of the detector.
 
 
 	G4cout.precision(8);
 	G4cout << "[INFO] For the source to be located at a 100cm from the surface of the X-Ray detector" << G4endl;
 	G4cout << " it must be placed at " << (detectroStrecht + 100*cm)/mm << " mm" <<  endl;
 
+	///////////////////////////////////////////////////////////
 	// Definitions of Solids, Logical Volumes, Physical Volumes
 	// World
 	G4GeometryManager::GetInstance()->SetWorldMaximumExtent( worldLength );
@@ -201,7 +204,7 @@ G4VPhysicalVolume* RXGDetectorConstruction::DefineVolumes()
 
 	///////////////////////////////////////////////////////////
 	// Collimator
-	_CollimatorLogic = BuildCollimator( worldLV, 10*cm ); //NaIHalfZ + CollimatorHalfZ );
+	_CollimatorLogic = BuildCollimator( worldLV, 50*cm ); //NaIHalfZ + CollimatorHalfZ );
 
 	///////////////////////////////////////////////////////////
 	// RX Backscatter shield
@@ -274,52 +277,12 @@ G4VPhysicalVolume* RXGDetectorConstruction::DefineVolumes()
 			0,               	// copy number
 			true); 				// checking overlaps
 
-	///////////////////////////////////////////////////////////
-	// Box
-	double boxThickness = 3*mm;
-	double h_box_x = 15*cm;
-	double h_box_y = 15*cm;
-	double h_box_z = 25*cm;
-
-	G4Box * theBox_1 = new G4Box("XRayBox", h_box_x, h_box_y, h_box_z);
-	G4Box * theBox_2 = new G4Box("XRayBox",
-			h_box_x - boxThickness,
-			h_box_y - boxThickness,
-			h_box_z - boxThickness);
-	G4SubtractionSolid * theBox = new G4SubtractionSolid("XRayBox", theBox_1, theBox_2, 0x0, G4ThreeVector(0,0,0) );
-	G4LogicalVolume * theBoxLogic = new G4LogicalVolume(
-			theBox,    				// its solid
-			_Pb,      						// its material
-			"XRayBoxLogic");  				// its name
-	new G4PVPlacement(
-			0,					// no rotation
-			G4ThreeVector(0,0,100*cm),
-			theBoxLogic,	// its logical volume
-			"XRayBox",        // its name
-			worldLV,            // its mother  volume
-			false,           	// no boolean operations
-			0,               	// copy number
-			true); 				// checking overlaps
-
-	// mass of this box
-	G4double boxVolume = theBox->GetCubicVolume() / cm3;
-	G4double leadDensity = 1.13500E+01; // g/cm^3
-	G4double boxMass = boxVolume * leadDensity;
-	G4cout << "Box mass = " << boxMass/1000.0 << " kilograms" << G4endl;
-
 	// Visualization attributes
 	G4VisAttributes* RXSensorVisAtt = new G4VisAttributes( G4Colour::Red() );
 	RXSensorVisAtt->SetForceSolid( true );
 	//vitVisAtt->SetForceWireframe( true );
 	RXSensorVisAtt->SetForceAuxEdgeVisible( true );
 	_RXSensorLogic->SetVisAttributes( RXSensorVisAtt );
-
-	G4VisAttributes* boxVisAtt = new G4VisAttributes( G4Colour(1,1,1, 1) );
-	//boxVisAtt->SetForceSolid( true );
-	boxVisAtt->SetForceWireframe( true );
-	boxVisAtt->SetForceAuxEdgeVisible( true );
-	theBoxLogic->SetVisAttributes( boxVisAtt );
-
 
 
 	// Always return the physical world
