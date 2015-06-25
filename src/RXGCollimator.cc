@@ -35,7 +35,7 @@ G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * mot
 			_beamColimatorMaterial,
 			"CollimatorBodyLogic");
 
-	G4ThreeVector collPos(0,0, centerZ);
+	G4ThreeVector collPos(25*cm,25*cm, centerZ);
 
 	new G4PVPlacement(
 			0,                // no rotation
@@ -87,16 +87,25 @@ G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * mot
 	G4VSolid * substractColl = 0x0;
 	G4ThreeVector orgPos(0,0, -2*cm);
 	G4ThreeVector runPos = orgPos;
-	double inStep = 2*hc_rOuter_0 + hc_sep;
+//	double inStep = 2*hc_rOuter_0 + hc_sep;
+	double xStep = cos(30*pi/180) * (2*hc_rOuter_0 + hc_sep);
+	double yStep = 2*hc_rOuter_0 + hc_sep;
 	double posx = 0., posy = 0.;
 
-	for ( int i = -10 ; i <= 10 ; i++ ) { // loop in x
+	for ( int i = -20 ; i <= 20 ; i++ ) { // loop in x
 
 
-		for ( int j = -10 ; j <= 10 ; j++ ) { // loop in y
+		for ( int j = 20 ; j <= 20 ; j++ ) { // loop in y
 
-			posy = (double)j * inStep + ( (double)i*inStep/2. );
-			posx = i * inStep;
+//			posy = (double)j * inStep + ( (double)i*inStep/2. );
+//			posx = i * inStep;
+			if (i % 2 == 0) {
+				posy = (double)j * yStep;
+			}
+			else {
+				posy = (double)j * yStep + ( hc_rOuter_0 + hc_sep/2);
+			}
+			posx = i * xStep;
 			runPos.setY( posy );
 			runPos.setX( posx );
 
@@ -104,10 +113,13 @@ G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * mot
 			hcc_name += i; hcc_name += "_"; hcc_name += j;
 
 			// Condition to place or not a HoneyComp element
+			if (sqrt(posy*posy + posx*posx) > 7.5*cm) {
+				continue;
+			}
 
 			// Define rotation
-			//G4RotationMatrix * pRot = new G4RotationMatrix;
-			//pRot->rotateX( 20*deg );
+//			G4RotationMatrix * pRot = new G4RotationMatrix;
+//			pRot->rotateX( 20*deg );
 
 			new G4PVPlacement(
 					0,                // no rotation

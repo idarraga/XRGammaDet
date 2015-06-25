@@ -204,7 +204,7 @@ G4VPhysicalVolume* RXGDetectorConstruction::DefineVolumes()
 
 	///////////////////////////////////////////////////////////
 	// Collimator
-	_CollimatorLogic = BuildCollimator( worldLV, 50*cm ); //NaIHalfZ + CollimatorHalfZ );
+	_CollimatorLogic = BuildCollimator( worldLV, 50*cm ); //NaIHalfZ + CollimatorHalfZ ); //placement of collimator
 
 	///////////////////////////////////////////////////////////
 	// RX Backscatter shield
