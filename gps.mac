@@ -1,0 +1,12 @@
+
+/tracking/verbose 0
+
+#########################
+# GPS
+
+/control/execute beam_description.mac
+
+###########################
+# Run 
+/run/beamOn 100000
+

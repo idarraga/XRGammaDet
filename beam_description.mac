@@ -1,0 +1,50 @@
+
+#########################
+# GPS (General particle source)
+/gps/particle gamma
+/gps/pos/type Point
+
+# Centre
+/gps/pos/centre 0.0 0.0 1003.127 mm
+
+/gps/ang/type iso
+
+/gps/ang/mintheta 0. deg
+/gps/ang/maxtheta 4.56 deg
+/gps/ang/minphi 0. deg
+/gps/ang/maxphi 360 deg
+
+#/gps/direction  0 0 -1
+
+/gps/ene/type User
+/gps/hist/type energy
+# spectra
+#/gps/hist/point 0.140 1 # 140keV
+/control/execute gps_source_ASI_50kVp_XRayTube.mac
+#/gps/hist/point 0.140 1 #  (Energy in Mev, Intensity)
+
+#Beam 2
+/gps/source/add 1
+
+/gps/particle gamma
+/gps/pos/type Point
+
+# Centre
+/gps/pos/centre 0.0 0.0 503.127 mm
+
+/gps/ang/type iso
+
+/gps/ang/mintheta 0. deg
+/gps/ang/maxtheta 9.03 deg
+/gps/ang/minphi 0. deg
+/gps/ang/maxphi 360 deg
+
+#/gps/direction  0 0 -1
+
+/gps/ene/type User
+/gps/hist/type energy
+# spectra
+/gps/hist/point 0.140 1 #  (Energy in Mev, Intensity)
+
+/gps/source/list
+
