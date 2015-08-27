@@ -67,6 +67,12 @@
 RXGDetectorConstruction::RXGDetectorConstruction()
 : G4VUserDetectorConstruction()
 {
+	_NaIVisAtt = 0x0;
+	_RXReadOutVisAtt = 0x0;
+	_RXBShieldVisAtt = 0x0;
+	_RXSensorVisAtt = 0x0;
+
+	_doOverlapCheck = false;
 
 }
 
@@ -195,16 +201,17 @@ G4VPhysicalVolume* RXGDetectorConstruction::DefineVolumes()
 			true); // checking overlaps
 
 	// Visualization attributes
-	G4VisAttributes* NaIVisAtt = new G4VisAttributes( G4Colour::Yellow() );
-	NaIVisAtt->SetForceSolid( true );
-	//vitVisAtt->SetForceWireframe( true );
-	NaIVisAtt->SetForceAuxEdgeVisible( true );
-	_NaILogic->SetVisAttributes( NaIVisAtt );
+	if ( ! _NaIVisAtt )  {
+		_NaIVisAtt = new G4VisAttributes( G4Colour::Yellow() );
+		_NaIVisAtt->SetForceSolid( true );
+		_NaIVisAtt->SetForceAuxEdgeVisible( true );
+	}
+	_NaILogic->SetVisAttributes( _NaIVisAtt );
 
 
 	///////////////////////////////////////////////////////////
 	// Collimator
-	_CollimatorLogic = BuildCollimator( worldLV, NaIHalfZ + CollimatorHalfZ ); //placement of collimator
+	_CollimatorLogic = BuildCollimator( worldLV, NaIHalfZ + CollimatorHalfZ, _doOverlapCheck ); //placement of collimator
 
 	///////////////////////////////////////////////////////////
 	// RX Backscatter shield
@@ -227,11 +234,12 @@ G4VPhysicalVolume* RXGDetectorConstruction::DefineVolumes()
 			true); 				// checking overlaps
 
 	// Visualization attributes
-	G4VisAttributes* RXBShieldVisAtt = new G4VisAttributes( G4Colour::Blue() );
-	RXBShieldVisAtt->SetForceSolid( true );
-	//vitVisAtt->SetForceWireframe( true );
-	RXBShieldVisAtt->SetForceAuxEdgeVisible( true );
-	_RXBackscatterShieldLogic->SetVisAttributes( RXBShieldVisAtt );
+	if ( ! _RXBShieldVisAtt) {
+		_RXBShieldVisAtt = new G4VisAttributes( G4Colour::Blue() );
+		_RXBShieldVisAtt->SetForceSolid( true );
+		_RXBShieldVisAtt->SetForceAuxEdgeVisible( true );
+	}
+	_RXBackscatterShieldLogic->SetVisAttributes( _RXBShieldVisAtt );
 
 	///////////////////////////////////////////////////////////
 	// Si Read Out
@@ -252,11 +260,12 @@ G4VPhysicalVolume* RXGDetectorConstruction::DefineVolumes()
 			true); 				// checking overlaps
 
 	// Visualization attributes
-	G4VisAttributes* RXReadOutVisAtt = new G4VisAttributes( G4Colour::Black() );
-	RXReadOutVisAtt->SetForceSolid( true );
-	//vitVisAtt->SetForceWireframe( true );
-	RXReadOutVisAtt->SetForceAuxEdgeVisible( true );
-	_RXReadOutLogic->SetVisAttributes( RXReadOutVisAtt );
+	if ( ! _RXReadOutVisAtt) {
+		_RXReadOutVisAtt = new G4VisAttributes( G4Colour::Black() );
+		_RXReadOutVisAtt->SetForceSolid( true );
+		_RXReadOutVisAtt->SetForceAuxEdgeVisible( true );
+	}
+	_RXReadOutLogic->SetVisAttributes( _RXReadOutVisAtt );
 
 
 	///////////////////////////////////////////////////////////
@@ -278,11 +287,14 @@ G4VPhysicalVolume* RXGDetectorConstruction::DefineVolumes()
 			true); 				// checking overlaps
 
 	// Visualization attributes
-	G4VisAttributes* RXSensorVisAtt = new G4VisAttributes( G4Colour::Red() );
-	RXSensorVisAtt->SetForceSolid( true );
-	//vitVisAtt->SetForceWireframe( true );
-	RXSensorVisAtt->SetForceAuxEdgeVisible( true );
-	_RXSensorLogic->SetVisAttributes( RXSensorVisAtt );
+	if (! _RXSensorVisAtt) {
+		_RXSensorVisAtt = new G4VisAttributes( G4Colour::Red() );
+		_RXSensorVisAtt->SetForceSolid( true );
+		_RXSensorVisAtt->SetForceAuxEdgeVisible( true );
+	}
+	_RXSensorLogic->SetVisAttributes( _RXSensorVisAtt );
+
+
 
 
 	// Always return the physical world
@@ -302,6 +314,43 @@ void RXGDetectorConstruction::ConstructSDandField()
 	NaI_SD->SetOutputTree(_T[0], _od[0]);
 	SDman->AddNewDetector( NaI_SD );
 	_NaILogic->SetSensitiveDetector( NaI_SD );
+}
+
+void RXGDetectorConstruction::SetOuterVolumesTransparent(bool doTransparency){
+
+	if( doTransparency ) {
+		_RXReadOutVisAtt = new G4VisAttributes( G4Colour::Black() );
+		_RXReadOutVisAtt->SetForceSolid( false );
+		_RXReadOutVisAtt->SetForceWireframe( true );
+
+		_RXBShieldVisAtt = new G4VisAttributes( G4Colour::Blue() );
+		_RXBShieldVisAtt->SetForceSolid( false );
+		_RXBShieldVisAtt->SetForceWireframe( true );
+
+		_RXSensorVisAtt = new G4VisAttributes( G4Colour::Red() );
+		_RXSensorVisAtt->SetForceSolid( false );
+		_RXSensorVisAtt->SetForceWireframe( true );
+
+		_NaIVisAtt = new G4VisAttributes( G4Colour::Yellow() );
+		_NaIVisAtt->SetForceSolid( false );
+		_NaIVisAtt->SetForceWireframe( true );
+	} else {
+		_RXReadOutVisAtt = new G4VisAttributes( G4Colour::Black() );
+		_RXReadOutVisAtt->SetForceSolid( true );
+		//_RXReadOutVisAtt->SetForceWireframe( false );
+
+		_RXBShieldVisAtt = new G4VisAttributes( G4Colour::Blue() );
+		_RXBShieldVisAtt->SetForceSolid( true );
+		//_RXBShieldVisAtt->SetForceWireframe( false );
+
+		_RXSensorVisAtt = new G4VisAttributes( G4Colour::Red() );
+		_RXSensorVisAtt->SetForceSolid( true );
+		//_RXSensorVisAtt->SetForceWireframe( false );
+
+		_NaIVisAtt = new G4VisAttributes( G4Colour::Yellow() );
+		_NaIVisAtt->SetForceSolid( true );
+		//_NaIVisAtt->SetForceWireframe( false );
+	}
 
 }
 

@@ -60,8 +60,10 @@ class RXGDetectorConstruction : public G4VUserDetectorConstruction
     virtual G4VPhysicalVolume* Construct();
     virtual void ConstructSDandField();
     void SetOutputTree(TTree ** T, Outdata ** od) { _T = T ; _od = od; };
-    G4LogicalVolume * BuildCollimator(G4LogicalVolume * motherL, G4double centerZ);
+    G4LogicalVolume * BuildCollimator(G4LogicalVolume * motherL, G4double centerZ, G4bool checkOverlaps);
     G4LogicalVolume * PlaceAndHcc(G4Polyhedra *, G4ThreeVector);
+    void SetOuterVolumesTransparent(bool b);
+    void SetOverlapCheck(bool b) { _doOverlapCheck = b; }
 
   private:
     // methods
@@ -78,14 +80,25 @@ class RXGDetectorConstruction : public G4VUserDetectorConstruction
 
     // Logical volumes
     G4LogicalVolume * _NaILogic;
+    G4VisAttributes * _NaIVisAtt;
+
     G4LogicalVolume * _CollimatorLogic;
+
     G4LogicalVolume * _RXBackscatterShieldLogic;
+    G4VisAttributes * _RXBShieldVisAtt;
+
     G4LogicalVolume * _RXReadOutLogic;
+    G4VisAttributes * _RXReadOutVisAtt;
+
     G4LogicalVolume * _RXSensorLogic;
+    G4VisAttributes * _RXSensorVisAtt;
 
     // Output to pass to the SD
     Outdata ** _od;
     TTree ** _T;
+
+    //
+    G4bool _doOverlapCheck;
 
 };
 

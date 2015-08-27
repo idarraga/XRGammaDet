@@ -95,7 +95,13 @@ G4bool RXGTrackerSD::ProcessHits(G4Step* aStep,
 	//_od->x.push_back( stepPoint->GetPosition().x() / CLHEP::mm );
 
 	if( trackId == 1 ) {
+
 		_od->edep.push_back( edep / CLHEP::keV );
+
+		if ( _od->x.empty() ) _od->x.push_back( aStep->GetPreStepPoint()->GetPosition().x() / CLHEP::mm );
+		if ( _od->y.empty() ) _od->y.push_back( aStep->GetPreStepPoint()->GetPosition().y() / CLHEP::mm );
+		if ( _od->z.empty() ) _od->z.push_back( aStep->GetPreStepPoint()->GetPosition().z() / CLHEP::mm );
+
 		//int si = _od->edep.size();
 		//cout << si << endl;
 		_primariesCount++;
@@ -125,7 +131,8 @@ void RXGTrackerSD::EndOfEvent(G4HCofThisEvent*)
 	}
 	// Fill the Tree
 
-	_od->nReach = _od->edep.size();
+	if ( ! _od->edep.empty() ) _od->nReach = 1;
+	else _od->nReach = 0;
 
 	_T->Fill();
 

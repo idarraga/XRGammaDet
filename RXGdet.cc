@@ -27,6 +27,10 @@
 #include "TFile.h"
 #include "TTree.h"
 
+#include <unistd.h>
+#include <sstream>
+#include <string.h>
+
 #include "RXGDetectorConstruction.hh"
 
 #ifdef G4MULTITHREADED
@@ -39,8 +43,11 @@
 
 #include "G4UImanager.hh"
 #include "FTFP_BERT.hh"
+#include "QGSP_BERT_HP.hh"
+
 //#include "G4StepLimiterPhysics.hh"
 #include "RXGSteppingAction.hh"
+#include "RXGActionInitialization.hh"
 
 #include "RXGTrackerSD.hh"
 
@@ -56,13 +63,32 @@
 
 #include "G4PhysListFactory.hh"
 
+// Prototypes
+void SaveRandomSeed(long int seed, TString name);
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo......
 
 int main(int argc,char** argv)
 {
-	// Choose the Random engine
-	G4Random::setTheEngine(new CLHEP::RanecuEngine);
+
+	// Seed the random number generator manually
+	time_t rawtime;
+	time(&rawtime);
+	G4long myseed = G4long(rawtime);
+	G4cout << "[INFO] The local time : " << myseed << G4endl;
+	// Get the process id and use it to offset the time
+	G4long pid = (G4long) getpid();
+	G4cout << "[INFO] The pid { getpid() } : " << pid << G4endl;
+	// Offset the local time
+	myseed += pid;
+	// Finally this will be the seed
+	G4cout << "[INFO] The random seed (local time + pid): " << myseed << G4endl;
+	// Save the seed to double check later
+	SaveRandomSeed(myseed, "run");
+	//choose the Random engine
+	CLHEP::RanecuEngine * reng = new CLHEP::RanecuEngine();
+	reng->setSeed(myseed);
+	G4Random::setTheEngine(reng);
 
 	Outdata * oDataNaI = new Outdata;
 	Outdata * oDataChoroid = new Outdata;
@@ -79,6 +105,9 @@ int main(int argc,char** argv)
 	oT_NaI->Branch("edepSec", &(oDataNaI->edepSec));
 	oT_NaI->Branch("pdgId", &(oDataNaI->pdgId));
 	oT_NaI->Branch("nReach", &(oDataNaI->nReach));
+	oT_NaI->Branch("x", &(oDataNaI->x));
+	oT_NaI->Branch("y", &(oDataNaI->y));
+	oT_NaI->Branch("z", &(oDataNaI->z));
 
 	oTChoroid->Branch("edep", &(oDataChoroid->edep));
 	oTChoroid->Branch("edepSec", &(oDataChoroid->edepSec));
@@ -106,27 +135,32 @@ int main(int argc,char** argv)
 	RXGDetectorConstruction * det = new RXGDetectorConstruction();
 	det->SetOutputTree(oT, oData);
 	runManager->SetUserInitialization( det );
+	// Certain properties for detector building
+	det->SetOuterVolumesTransparent( true );
+	det->SetOverlapCheck( false );
 
-	//G4VModularPhysicsList* physicsList = new FTFP_BERT;
+	G4VModularPhysicsList* physicsList = new QGSP_BERT_HP;
 	//physicsList->RegisterPhysics(new G4StepLimiterPhysics());
-	//runManager->SetUserInitialization(physicsList);
+	runManager->SetUserInitialization(physicsList);
 
 	// Physics List
-	G4PhysListFactory factory;
-	G4VModularPhysicsList * phys = 0;
+	//G4PhysListFactory factory;
+	//G4VModularPhysicsList * phys = 0;
 	//G4String physName = "FTFP_BERT";
-	G4String physName = "QGSP_BERT_EMY";
+	//G4String physName = "QGSP_BERT_EMY";
 	// reference PhysicsList via its name
-	phys = factory.GetReferencePhysList(physName);
-	runManager->SetUserInitialization(phys);
+	//phys = factory.GetReferencePhysList(physName);
+	//runManager->SetUserInitialization(phys);
 
 	G4UserSteppingAction * stepping_action = new RXGSteppingAction();
 	runManager->SetUserAction(stepping_action);
 
-	//runManager->SetUserInitialization( new RXGActionInitialization() );
+	runManager->SetUserInitialization( new RXGActionInitialization() );
+
 
 	// Initialize G4 kernel
 	runManager->Initialize();
+
 
 #ifdef G4VIS_USE
 	// Initialize visualization
@@ -190,3 +224,14 @@ int main(int argc,char** argv)
 }
 
 //....oooOO0OOooo........oooOO0OOooo........oooOO0OOooo........oooOO0OOooo.....
+
+void SaveRandomSeed(long int seed, TString name) {
+
+	TString ofn = "randseed_";
+	ofn += name;
+	ofn += ".txt";
+	std::ofstream ofs (ofn.Data(), std::ofstream::out);
+	ofs << seed << endl;
+	ofs.close();
+
+}

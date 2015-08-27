@@ -24,7 +24,7 @@
 
 using namespace CLHEP;
 
-G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * motherL, G4double centerZ) {
+G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * motherL, G4double centerZ, G4bool checkOverlaps) {
 
 	///////////////////////////////////////////////////////////////////////////////////////
 	// Collimator Pb body
@@ -49,8 +49,8 @@ G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * mot
 
 	// Visualization attributes
 	G4VisAttributes* CollVisAtt = new G4VisAttributes( G4Colour(1,1,1, 1) );
-//	CollVisAtt->SetForceSolid( true );
-	CollVisAtt->SetForceWireframe( true );
+	CollVisAtt->SetForceSolid( true );
+	//CollVisAtt->SetForceWireframe( true );
 	CollVisAtt->SetForceAuxEdgeVisible( true );
 	_CollimatorLogic->SetVisAttributes( CollVisAtt );
 	///////////////////////////////////////////////////////////////////////////////////////
@@ -63,9 +63,11 @@ G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * mot
 	double xStep = cos(30*pi/180) * (2*hc_rOuter_0 + hc_sep);
 	double yStep = 2*hc_rOuter_0 + hc_sep;
 	G4ThreeVector runPos = orgPos;
+	int maxSteps = 20; // 75
+	int minSteps = -20;  // -75
 
-	for ( int i = -75; i <= 75 ; i++ ) { // loop in x
-			for ( int j = -75 ; j <= 75 ; j++ ) { // loop in y
+	for ( int i = minSteps; i <= maxSteps ; i++ ) { // loop in x
+			for ( int j = minSteps ; j <= maxSteps ; j++ ) { // loop in y
 
 				double dy = hc_rOuter_0;
 				double dx = tan(30*deg) * dy;
@@ -219,7 +221,7 @@ G4LogicalVolume * RXGDetectorConstruction::BuildCollimator(G4LogicalVolume * mot
 						_CollimatorLogic,          // its mother  volume
 						true,            // no boolean operations
 						0,                // copy number
-						false);//true); 			  // checking overlaps
+						checkOverlaps); 			  // checking overlaps
 
 				G4cout << "[COLL] Building collimator element " << i << "," << j << " | " << hcc_name << G4endl;
 			}
